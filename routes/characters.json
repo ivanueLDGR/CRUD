@@ -1,0 +1,86 @@
+[
+  {
+    "id": "1",
+    "nome": "juliano",
+    "classe": "guerreiro",
+    "habilidades": [
+      "correr",
+      "chutar",
+      "curar"
+    ],
+    "atualizado": "22/04/2023-18:45",
+    "idade": 248,
+    "itens": [
+      {
+        "nome": "faca",
+        "pode": "furar"
+      },
+      {
+        "nome": "escudo",
+        "pode": "defender"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "nome": "ivan",
+    "classe": "mago",
+    "habilidades": [
+      "correr",
+      "curar",
+      "conjurar"
+    ],
+    "atualizado": "24/04/2023-12:45",
+    "idade": 33,
+    "itens": [
+      {
+        "nome": "cajado",
+        "pode": "bola de fogo"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "nome": "nayara",
+    "classe": "paladino",
+    "habilidades": [
+      "correr",
+      "curar",
+      "abjurar"
+    ],
+    "atualizado": "25/10/2023-18:45",
+    "idade": 23,
+    "itens": [
+      {
+        "nome": "espada",
+        "pode": "cortar"
+      },
+      {
+        "nome": "escudo",
+        "pode": "defender"
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "nome": "nayara",
+    "classe": "paladino",
+    "habilidades": [
+      "correr",
+      "curar",
+      "abjurar"
+    ],
+    "atualizado": "25/10/2023-18:45",
+    "idade": 23,
+    "itens": [
+      {
+        "nome": "espada",
+        "pode": "cortar"
+      },
+      {
+        "nome": "escudo",
+        "pode": "defender"
+      }
+    ]
+  }
+]
