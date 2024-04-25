@@ -35,28 +35,7 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
     try {
         const data = await readCharactersList();
-        const newCharacter = {
-                "id": String(data.length + 1),
-                "nome": "nayara",
-                "classe": "paladino",
-                "habilidades": [
-                  "correr",
-                  "curar",
-                  "abjurar"
-                ],
-                "atualizado": "25/10/2023-18:45",
-                "idade": 23,
-                "itens": [
-                  {
-                    "nome": "espada",
-                    "pode": "cortar"
-                  },
-                  {
-                    "nome": "escudo",
-                    "pode": "defender"
-                  }
-                ]
-            };
+        const newCharacter = req.body
         data.push(newCharacter)
         await writeCharactersList(data)
         res.send(data)
@@ -70,7 +49,9 @@ router
     .get(async (req, res) => {
         try {
             const data = await readCharactersList();
-            res.send(data[req.params.id - 1]);
+            const targetId = req.params.id
+            const targetIdIndex = data.findIndex((character) => targetId == character.id)
+            res.send(data[targetIdIndex]);
         } catch (error) {
             console.log(error);
         }
@@ -78,9 +59,16 @@ router
     .put(async (req, res) => {
         try {
             const data = await readCharactersList();
-            data[req.params.id - 1].classe = "robervaldo";
+            const targetId = req.params.id
+            const targetIdIndex = data.findIndex((character) => targetId == character.id)
+            const updatesRequested = {...req.body}
+            console.log(targetId, updatesRequested)
+            for(const key in updatesRequested){
+                data[targetIdIndex][key] = updatesRequested[key]
+            }
+            console.log(data[targetIdIndex])
             await writeCharactersList(data)
-            res.send(data[req.params.id - 1]);
+            res.send(data[targetIdIndex]);
         } catch (error) {
             console.log(error);
         }
@@ -88,7 +76,10 @@ router
     .delete(async (req, res) => {
         try {
             const data = await readCharactersList();
-            data.splice(req.params.id - 1, 1)
+            const targetId = req.params.id
+            const targetIdIndex = data.findIndex((character) => targetId == character.id)
+            data.splice(targetIdIndex, 1)
+            await writeCharactersList(data)
             res.send(data);
         } catch (error) {
             console.log(error);

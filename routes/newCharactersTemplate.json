@@ -1,0 +1,22 @@
+{
+    "id": "3",
+    "nome": "nayara",
+    "classe": "paladino",
+    "habilidades": [
+      "correr",
+      "curar",
+      "abjurar"
+    ],
+    "atualizado": "25/10/2023-18:45",
+    "idade": 23,
+    "itens": [
+      {
+        "nome": "espada",
+        "pode": "cortar"
+      },
+      {
+        "nome": "escudo",
+        "pode": "defender"
+      }
+    ]
+}
