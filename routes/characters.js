@@ -128,11 +128,18 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
     try {
         const data = await readCharactersList();
-        const newCharacter = req.body
-        const statusArray = validateFields(newCharacter)
+        const newCharacterRequest = req.body
+        const statusArray = validateFields(newCharacterRequest)
         const statusMessage = checkPOSTStatusArray(statusArray)
         if (statusMessage != "ok"){
             return res.send(statusMessage)
+        }
+        let newCharacter = {}
+        for(let i in statusArray){
+            var propertyName = Object.values(statusArray[i])[1]
+            if(Object.values(statusArray[i])[0] == "ok"){
+                newCharacter[propertyName] = newCharacterRequest[propertyName]
+            }
         }
         newCharacter.id = randomInt(100000)
         newCharacter.updated = getTime()
@@ -171,8 +178,12 @@ router
             if (statusMessage != "ok"){
                 return res.send(statusMessage)
             }
-            for(const key in updatesRequested){
-                data[targetIdIndex][key] = updatesRequested[key]
+            let newCharacter = {}
+            for(let i in statusArray){
+                var propertyName = Object.values(statusArray[i])[1]
+                if(Object.values(statusArray[i])[0] == "ok"){
+                    newCharacter[propertyName] = updatesRequested[propertyName]
+                }
             }
             data[targetIdIndex].updated = getTime()
             await writeCharactersList(data)
