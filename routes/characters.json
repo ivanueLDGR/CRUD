@@ -1,12 +1,12 @@
 [
   {
     "id": "1",
-    "name": "juliano",
-    "classe": "guerreiro",
+    "name": "nayara",
+    "classe": "paladino",
     "habilidades": [
       "correr",
-      "chutar",
-      "curar"
+      "curar",
+      "abjurar"
     ],
     "atualizado": "22/04/2023-18:45",
     "age": 248,
@@ -32,24 +32,6 @@
     ],
     "atualizado": "24/04/2023-12:45",
     "age": 33,
-    "itens": [
-      {
-        "name": "cajado",
-        "pode": "bola de fogo"
-      }
-    ]
-  },
-  {
-    "id": "22",
-    "name": "dsfw3423",
-    "classe": "pa22ino",
-    "habilidades": [
-      "correr",
-      "curar",
-      "conjurar"
-    ],
-    "atualizado": "24/04/2023-12:45",
-    "age": 2223,
     "itens": [
       {
         "name": "cajado",

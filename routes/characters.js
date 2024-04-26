@@ -1,3 +1,4 @@
+const { randomInt } = require("crypto");
 const express = require("express")
 const router = express.Router()
 const fs = require('fs/promises');
@@ -23,9 +24,9 @@ async function writeCharactersList(data){
     }
 }
 
-function validatePost(newCharacter){
+function validateFields(characterFields){
     let statusArray = []
-    const newCharacterDesconstructed = {...newCharacter}
+    const newCharacterDesconstructed = {...characterFields}
     statusArray.push(validateName(newCharacterDesconstructed.name))
     statusArray.push(validateClasse(newCharacterDesconstructed.classe))
     statusArray.push(validateHabilidades(newCharacterDesconstructed.habilidades))
@@ -53,10 +54,9 @@ function validateClasse(classe){
 }
 
 function validateHabilidades(habilidades){
-    console.log(habilidades, typeof habilidades)
     if (!habilidades){
         return {status: "missing", field: "habilidades"};
-    }else if (typeof habilidades != "array"){
+    }else if (!Array.isArray(habilidades)){
         return {status: "incorrect", field: "habilidades"}
     }
     return {status: "ok", field: "habilidades"}
@@ -74,16 +74,29 @@ function validateAge(age){
 function validateItens(itens){
     if (!itens){
         return {status: "missing", field: "itens"};
-    }else if (typeof itens != "array"){
+    }else if (!Array.isArray(itens)){
         return {status: "incorrect", field: "itens"}
     }
     return {status: "ok", field: "itens"}
 }
 
-function checkStatusArray(statusArray){
+function checkPOSTStatusArray(statusArray){
     let statusMessage = ""
     for (var i in statusArray){
         if(statusArray[i].status != "ok"){
+            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
+        }
+    }
+    if (statusMessage == ""){
+        statusMessage = "ok"
+    }
+    return statusMessage
+}
+
+function checkPUTStatusArray(statusArray){
+    let statusMessage = ""
+    for (var i in statusArray){
+        if(statusArray[i].status == "incorrect"){
             statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
         }
     }
@@ -106,14 +119,15 @@ router.post("/", async (req, res) => {
     try {
         const data = await readCharactersList();
         const newCharacter = req.body
-        const statusArray = validatePost(newCharacter)
-        const statusMessage = checkStatusArray(statusArray)
+        const statusArray = validateFields(newCharacter)
+        const statusMessage = checkPOSTStatusArray(statusArray)
         if (statusMessage != "ok"){
             return res.send(statusMessage)
         }
+        newCharacter.id = randomInt(100000)
         data.push(newCharacter)
         await writeCharactersList(data)
-        return res.send("Character was successfully created")
+        return res.send(`Character was successfully created with ID: ${newCharacter.id}`)
     } catch (error) {
         console.log(error);
     }
@@ -141,11 +155,14 @@ router
             const targetId = req.params.id
             const targetIdIndex = data.findIndex((character) => targetId == character.id)
             const updatesRequested = {...req.body}
-            console.log(targetId, updatesRequested)
+            const statusArray = validateFields(updatesRequested)
+            const statusMessage = checkPUTStatusArray(statusArray)
+            if (statusMessage != "ok"){
+                return res.send(statusMessage)
+            }
             for(const key in updatesRequested){
                 data[targetIdIndex][key] = updatesRequested[key]
             }
-            console.log(data[targetIdIndex])
             await writeCharactersList(data)
             res.send(data[targetIdIndex]);
         } catch (error) {
