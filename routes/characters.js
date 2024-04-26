@@ -24,6 +24,16 @@ async function writeCharactersList(data){
     }
 }
 
+function getTime(){
+    var currentdate = new Date(); 
+    var datetime = String(currentdate.getDate()).padStart(2, '0') + "/"
+        + String(currentdate.getMonth()+1).padStart(2, '0')  + "/" 
+        + String(currentdate.getFullYear()) + "-"  
+        + String(currentdate.getHours()).padStart(2, '0') + ":"  
+        + String(currentdate.getMinutes()).padStart(2, '0')
+    return datetime
+}
+
 function validateFields(characterFields){
     let statusArray = []
     const newCharacterDesconstructed = {...characterFields}
@@ -125,6 +135,7 @@ router.post("/", async (req, res) => {
             return res.send(statusMessage)
         }
         newCharacter.id = randomInt(100000)
+        newCharacter.updated = getTime()
         data.push(newCharacter)
         await writeCharactersList(data)
         return res.send(`Character was successfully created with ID: ${newCharacter.id}`)
@@ -163,6 +174,7 @@ router
             for(const key in updatesRequested){
                 data[targetIdIndex][key] = updatesRequested[key]
             }
+            data[targetIdIndex].updated = getTime()
             await writeCharactersList(data)
             res.send(data[targetIdIndex]);
         } catch (error) {
