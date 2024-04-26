@@ -1,7 +1,7 @@
 [
-{
+  {
     "id": "1",
-    "nome": "juliano",
+    "name": "juliano",
     "classe": "guerreiro",
     "habilidades": [
       "correr",
@@ -9,34 +9,34 @@
       "curar"
     ],
     "atualizado": "22/04/2023-18:45",
-    "idade": 248,
+    "age": 248,
     "itens": [
       {
-        "nome": "faca",
+        "name": "faca",
         "pode": "furar"
       },
       {
-        "nome": "escudo",
+        "name": "escudo",
         "pode": "defender"
       }
     ]
-},
-{
-  "id": "2",
-  "nome": "ivan",
-  "classe": "mago",
-  "habilidades": [
-    "correr",
-    "curar",
-    "conjurar"
-  ],
-  "atualizado": "24/04/2023-12:45",
-  "idade": 33,
-  "itens": [
-    {
-      "nome": "cajado",
-      "pode": "bola de fogo"
-    }
-  ]
-}
+  },
+  {
+    "id": "2",
+    "name": "ivan",
+    "classe": "mago",
+    "habilidades": [
+      "correr",
+      "curar",
+      "conjurar"
+    ],
+    "atualizado": "24/04/2023-12:45",
+    "age": 33,
+    "itens": [
+      {
+        "name": "cajado",
+        "pode": "bola de fogo"
+      }
+    ]
+  }
 ]

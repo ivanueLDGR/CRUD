@@ -1,6 +1,6 @@
 {
     "id": "3",
-    "nome": "nayara",
+    "name": "nayara",
     "classe": "paladino",
     "habilidades": [
       "correr",
@@ -8,7 +8,7 @@
       "abjurar"
     ],
     "atualizado": "25/10/2023-18:45",
-    "idade": 23,
+    "age": 23,
     "itens": [
       {
         "nome": "espada",

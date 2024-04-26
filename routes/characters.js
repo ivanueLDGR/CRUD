@@ -53,7 +53,8 @@ function validateClasse(classe){
 }
 
 function validateHabilidades(habilidades){
-    if (!classe){
+    console.log(habilidades, typeof habilidades)
+    if (!habilidades){
         return {status: "missing", field: "habilidades"};
     }else if (typeof habilidades != "array"){
         return {status: "incorrect", field: "habilidades"}
@@ -83,7 +84,7 @@ function checkStatusArray(statusArray){
     let statusMessage = ""
     for (var i in statusArray){
         if(statusArray[i].status != "ok"){
-            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.keys(statusArray[i])[0]}, `
+            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
         }
     }
     if (statusMessage == ""){
@@ -125,7 +126,11 @@ router
             const data = await readCharactersList();
             const targetId = req.params.id
             const targetIdIndex = data.findIndex((character) => targetId == character.id)
-            res.send(data[targetIdIndex]);
+            if(targetIdIndex == -1){
+                return res.send("No character matches this ID")
+            }
+            console.log(targetIdIndex, typeof(targetIdIndex))
+            return res.send(data[targetIdIndex]);
         } catch (error) {
             console.log(error);
         }
