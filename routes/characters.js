@@ -46,18 +46,20 @@ function validateFields(characterFields){
 }
 
 function validateName(name){
+    const nameRegex = /^(?! )[A-Za-z]+(?: [A-Za-z]+)*$/
     if (!name){
         return {status: "missing", field: "name"};
-    }else if (typeof name != "string"){
+    }else if (!verifyRegex(name, nameRegex)){
         return {status: "incorrect", field: "name"}
     }
     return {status: "ok", field: "name"}
 }
 
 function validateClasse(classe){
+    const classeRegex = /^(?! )[A-Za-z]+$/
     if (!classe){
         return {status: "missing", field: "classe"};
-    }else if (typeof classe != "string"){
+    }else if (!verifyRegex(classe, classeRegex)){
         return {status: "incorrect", field: "classe"}
     }
     return {status: "ok", field: "classe"}
@@ -73,9 +75,10 @@ function validateHabilidades(habilidades){
 }
 
 function validateAge(age){
+    const ageRegex = /^\d{1,100}$/
     if (!age){
         return {status: "missing", field: "age"};
-    }else if (typeof age != "number" || age < 1){
+    }else if (age < 1 || !verifyRegex(age.toString(), ageRegex)){   
         return {status: "incorrect", field: "age"}
     }
     return {status: "ok", field: "age"}
@@ -88,6 +91,10 @@ function validateItens(itens){
         return {status: "incorrect", field: "itens"}
     }
     return {status: "ok", field: "itens"}
+}
+
+function verifyRegex(text, regex){
+    return regex.test(text)
 }
 
 function checkPOSTStatusArray(statusArray){
@@ -178,11 +185,10 @@ router
             if (statusMessage != "ok"){
                 return res.send(statusMessage)
             }
-            let newCharacter = {}
             for(let i in statusArray){
                 var propertyName = Object.values(statusArray[i])[1]
                 if(Object.values(statusArray[i])[0] == "ok"){
-                    newCharacter[propertyName] = updatesRequested[propertyName]
+                    data[targetIdIndex][propertyName] = updatesRequested[propertyName]
                 }
             }
             data[targetIdIndex].updated = getTime()
