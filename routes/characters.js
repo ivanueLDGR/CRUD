@@ -1,27 +1,26 @@
 const { randomInt } = require("crypto");
 const express = require("express")
 const router = express.Router()
-const fs = require('fs/promises');
+const validations = require('../models/validations.js');
+const fs = require('fs')
 
-async function readCharactersList(){
-    try {
-        const rawData = await fs.readFile('./routes/characters.json', {encoding: 'utf8'});
-        const data = JSON.parse(rawData)
-        return data
-    }
-    catch(err) {
-        console.log(err)
-        throw error
-    }
-}
+let charactersList = []
 
-async function writeCharactersList(data){
-    try {
-        await fs.writeFile('./routes/characters.json', JSON.stringify(data, null, 2), {encoding: 'utf8'});
-    } catch (error) {
-        console.log(error);
-        throw error;
+fs.readFile('./routes/characters.json', 'utf8', function (err, data) {
+    if (err) {
+      console.log(err);
     }
+    charactersList = JSON.parse(data)
+});
+
+function updateDatabase(charactersList){
+    fs.writeFile('./routes/characters.json', JSON.stringify(charactersList), err=> {
+        if (err) {
+          console.error(err);
+        } else {
+          console.log("database updated")
+        }
+    })
 }
 
 function getTime(){
@@ -34,125 +33,72 @@ function getTime(){
     return datetime
 }
 
-function validateFields(characterFields){
-    let statusArray = []
-    const newCharacterDesconstructed = {...characterFields}
-    statusArray.push(validateName(newCharacterDesconstructed.name))
-    statusArray.push(validateClasse(newCharacterDesconstructed.classe))
-    statusArray.push(validateHabilidades(newCharacterDesconstructed.habilidades))
-    statusArray.push(validateAge(newCharacterDesconstructed.age))
-    statusArray.push(validateItens(newCharacterDesconstructed.itens))
-    return statusArray
+function handlePOSTRequest(request){
+    const statusArray = validations.validateFields(request)
+    const statusMessage = validations.statusMessageGenerator(statusArray, "POST")
+    const returnMessage = statusMessageHandler(statusMessage, statusArray, "POST", request)
+    return returnMessage
 }
 
-function validateName(name){
-    const nameRegex = /^(?! )[A-Za-z]+(?: [A-Za-z]+)*$/
-    if (!name){
-        return {status: "missing", field: "name"};
-    }else if (!verifyRegex(name, nameRegex)){
-        return {status: "incorrect", field: "name"}
-    }
-    return {status: "ok", field: "name"}
+function handlePUTRequest(request){
+    const statusArray = validations.validateFields(request)
+    const statusMessage = validations.statusMessageGenerator(statusArray, "PUT")
+    const returnMessage = statusMessageHandler(statusMessage, statusArray, "PUT", request)
+    return returnMessage
 }
 
-function validateClasse(classe){
-    const classeRegex = /^(?! )[A-Za-z]+$/
-    if (!classe){
-        return {status: "missing", field: "classe"};
-    }else if (!verifyRegex(classe, classeRegex)){
-        return {status: "incorrect", field: "classe"}
+function statusMessageHandler(statusMessage, statusArray, requestType, request){
+    if(statusMessage != "ok"){
+        return statusMessage
     }
-    return {status: "ok", field: "classe"}
-}
-
-function validateHabilidades(habilidades){
-    if (!habilidades){
-        return {status: "missing", field: "habilidades"};
-    }else if (!Array.isArray(habilidades)){
-        return {status: "incorrect", field: "habilidades"}
-    }
-    return {status: "ok", field: "habilidades"}
-}
-
-function validateAge(age){
-    const ageRegex = /^\d{1,100}$/
-    if (!age){
-        return {status: "missing", field: "age"};
-    }else if (age < 1 || !verifyRegex(age.toString(), ageRegex)){   
-        return {status: "incorrect", field: "age"}
-    }
-    return {status: "ok", field: "age"}
-}
-
-function validateItens(itens){
-    if (!itens){
-        return {status: "missing", field: "itens"};
-    }else if (!Array.isArray(itens)){
-        return {status: "incorrect", field: "itens"}
-    }
-    return {status: "ok", field: "itens"}
-}
-
-function verifyRegex(text, regex){
-    return regex.test(text)
-}
-
-function checkPOSTStatusArray(statusArray){
-    let statusMessage = ""
-    for (var i in statusArray){
-        if(statusArray[i].status != "ok"){
-            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
-        }
-    }
-    if (statusMessage == ""){
-        statusMessage = "ok"
-    }
+    if(requestType == "POST"){
+        returnMessage = successHandlerPOST(statusArray, request)
+        return returnMessage
+    }else if(requestType == "PUT"){
+        returnMessage = successHandlerPUT(statusArray, request)
+        return returnMessage
+    } else statusMessage = "error"
     return statusMessage
 }
 
-function checkPUTStatusArray(statusArray){
-    let statusMessage = ""
-    for (var i in statusArray){
-        if(statusArray[i].status == "incorrect"){
-            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
+async function successHandlerPOST(statusArray, newCharacterRequest){
+    let newCharacter = {}
+    for(let i in statusArray){
+        var propertyName = Object.values(statusArray[i])[1]
+        newCharacter[propertyName] = newCharacterRequest[propertyName]
+    }
+    newCharacter.id = String(randomInt(100000))
+    newCharacter.updated = getTime()
+    charactersList.push(newCharacter)
+    await updateDatabase(charactersList)
+    return (`Character was successfully created with ID: ${newCharacter.id}`)
+}
+
+async function successHandlerPUT(statusArray, updateRequest){
+    const updatesRequested = {...updateRequest}
+    for(let i in statusArray){
+        var propertyName = Object.values(statusArray[i])[1]
+        if(Object.values(statusArray[i])[0] == "ok"){
+            charactersList[targetIdIndex][propertyName] = updatesRequested[propertyName]
         }
     }
-    if (statusMessage == ""){
-        statusMessage = "ok"
-    }
-    return statusMessage
+    charactersList[targetIdIndex].updated = getTime()
+    await updateDatabase(charactersList)
 }
 
 router.get("/", async (req, res) => {
     try {
-        const data = await readCharactersList();
-        res.send(data);
+        res.send(charactersList);
     } catch (error) {
         console.log(error);
+        res.status(500).send("Error fetching characters list");
     }
-});
+})
 
 router.post("/", async (req, res) => {
     try {
-        const data = await readCharactersList();
-        const newCharacterRequest = req.body
-        const statusArray = validateFields(newCharacterRequest)
-        const statusMessage = checkPOSTStatusArray(statusArray)
-        if (statusMessage != "ok"){
-            return res.send(statusMessage)
-        }
-        let newCharacter = {}
-        for(let i in statusArray){
-            var propertyName = Object.values(statusArray[i])[1]
-            if(Object.values(statusArray[i])[0] == "ok"){
-                newCharacter[propertyName] = newCharacterRequest[propertyName]
-            }
-        }
-        newCharacter.id = randomInt(100000)
-        newCharacter.updated = getTime()
-        data.push(newCharacter)
-        await writeCharactersList(data)
-        return res.send(`Character was successfully created with ID: ${newCharacter.id}`)
+        const returnMessage = handlePOSTRequest(req.body)
+        return res.send(returnMessage)
     } catch (error) {
         console.log(error);
     }
@@ -168,7 +114,6 @@ router
             if(targetIdIndex == -1){
                 return res.send("No character matches this ID")
             }
-            console.log(targetIdIndex, typeof(targetIdIndex))
             return res.send(data[targetIdIndex]);
         } catch (error) {
             console.log(error);
@@ -176,23 +121,12 @@ router
     })
     .put(async (req, res) => {
         try {
-            const data = await readCharactersList();
             const targetId = req.params.id
-            const targetIdIndex = data.findIndex((character) => targetId == character.id)
-            const updatesRequested = {...req.body}
-            const statusArray = validateFields(updatesRequested)
-            const statusMessage = checkPUTStatusArray(statusArray)
-            if (statusMessage != "ok"){
-                return res.send(statusMessage)
-            }
-            for(let i in statusArray){
-                var propertyName = Object.values(statusArray[i])[1]
-                if(Object.values(statusArray[i])[0] == "ok"){
-                    data[targetIdIndex][propertyName] = updatesRequested[propertyName]
-                }
-            }
-            data[targetIdIndex].updated = getTime()
-            await writeCharactersList(data)
+            const targetIdIndex = charactersList.findIndex((character) => targetId == character.id)
+
+            const returnMessage = handlePUTRequest({...req.body})
+
+
             res.send(data[targetIdIndex]);
         } catch (error) {
             console.log(error);
@@ -203,8 +137,11 @@ router
             const data = await readCharactersList();
             const targetId = req.params.id
             const targetIdIndex = data.findIndex((character) => targetId == character.id)
+            if(targetIdIndex == -1){
+                return res.send("invalid ID")
+            }
             data.splice(targetIdIndex, 1)
-            await writeCharactersList(data)
+            await updateDatabase(data)
             res.send(data);
         } catch (error) {
             console.log(error);
@@ -215,7 +152,5 @@ router
 router.param("id", async (req, res, next, id) => {
     next()
 });
-
-
 
 module.exports = router

@@ -1,0 +1,103 @@
+function validateFields(characterFields){
+    let statusArray = []
+    const newCharacterDesconstructed = {...characterFields}
+    statusArray.push(validateName(newCharacterDesconstructed.name))
+    statusArray.push(validateClasse(newCharacterDesconstructed.classe))
+    statusArray.push(validateHabilidades(newCharacterDesconstructed.habilidades))
+    statusArray.push(validateAge(newCharacterDesconstructed.age))
+    statusArray.push(validateItens(newCharacterDesconstructed.itens))
+    return statusArray
+}
+
+function statusMessageGenerator(statusArray, string){
+    let statusMessage = ""
+    if(string == "POST"){
+        statusMessage = statusMessageGeneratorPOST(statusArray)
+    }else if(string == "PUT"){
+        statusMessage = statusMessageGeneratorPUT(statusArray)
+    } else statusMessage = "error"
+    return statusMessage
+}
+
+function statusMessageGeneratorPOST(statusArray){
+    let statusMessage = ""
+    for (var i in statusArray){
+        if(statusArray[i].status != "ok"){
+            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
+        }
+    }
+    if (statusMessage == ""){
+        statusMessage = "ok"
+    }
+    return statusMessage
+}
+
+function statusMessageGeneratorPUT(statusArray){
+    let statusMessage = ""
+    for (var i in statusArray){
+        if(statusArray[i].status == "incorrect"){
+            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
+        }
+    }
+    if (statusMessage == ""){
+        statusMessage = "ok"
+    }
+    return statusMessage
+}
+
+function validateName(name){
+    const nameRegex = /^(?! )[A-Za-z]+(?: [A-Za-z]+)*$/
+    if (!name){
+        return {status: "missing", field: "name"};
+    }else if (!verifyRegex(name, nameRegex)){
+        return {status: "incorrect", field: "name"}
+    }
+    return {status: "ok", field: "name"}
+}
+
+function validateClasse(classe){
+    const classeRegex = /^(?! )[A-Za-z]+$/
+    if (!classe){
+        return {status: "missing", field: "classe"};
+    }else if (!verifyRegex(classe, classeRegex)){
+        return {status: "incorrect", field: "classe"}
+    }
+    return {status: "ok", field: "classe"}
+}
+
+function validateHabilidades(habilidades){
+    if (!habilidades){
+        return {status: "missing", field: "habilidades"};
+    }else if (!Array.isArray(habilidades)){
+        return {status: "incorrect", field: "habilidades"}
+    }
+    return {status: "ok", field: "habilidades"}
+}
+
+function validateAge(age){
+    const ageRegex = /^\d{1,100}$/
+    if (!age){
+        return {status: "missing", field: "age"};
+    }else if (age < 1 || !verifyRegex(age.toString(), ageRegex)){   
+        return {status: "incorrect", field: "age"}
+    }
+    return {status: "ok", field: "age"}
+}
+
+function validateItens(itens){
+    if (!itens){
+        return {status: "missing", field: "itens"};
+    }else if (!Array.isArray(itens)){
+        return {status: "incorrect", field: "itens"}
+    }
+    return {status: "ok", field: "itens"}
+}
+
+function verifyRegex(text, regex){
+    return regex.test(text)
+}
+
+module.exports = {
+    validateFields,
+    statusMessageGenerator
+}
