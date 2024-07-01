@@ -1,48 +1,25 @@
-function validateFields(characterFields){
+function validateFields(characterRequest){
     let statusArray = []
-    const newCharacterDesconstructed = {...characterFields}
-    statusArray.push(validateName(newCharacterDesconstructed.name))
-    statusArray.push(validateClasse(newCharacterDesconstructed.classe))
-    statusArray.push(validateHabilidades(newCharacterDesconstructed.habilidades))
-    statusArray.push(validateAge(newCharacterDesconstructed.age))
-    statusArray.push(validateItens(newCharacterDesconstructed.itens))
-    return statusArray
+    let status = {status: "error", message: "statusMessageGenerator function not initialized"}
+    const characterRequestDesconstructed = {...characterRequest}
+    statusArray.push(validateName(characterRequestDesconstructed.name))
+    statusArray.push(validateClasse(characterRequestDesconstructed.classe))
+    statusArray.push(validateHabilidades(characterRequestDesconstructed.habilidades))
+    statusArray.push(validateAge(characterRequestDesconstructed.age))
+    statusArray.push(validateItens(characterRequestDesconstructed.itens))
+    status = statusMessageGenerator(statusArray)
+    return status
 }
 
-function statusMessageGenerator(statusArray, string){
-    let statusMessage = ""
-    if(string == "POST"){
-        statusMessage = statusMessageGeneratorPOST(statusArray)
-    }else if(string == "PUT"){
-        statusMessage = statusMessageGeneratorPUT(statusArray)
-    } else statusMessage = "error"
-    return statusMessage
-}
-
-function statusMessageGeneratorPOST(statusArray){
-    let statusMessage = ""
+function statusMessageGenerator(statusArray){
+    let status = {status: "ok", message: ""}
     for (var i in statusArray){
         if(statusArray[i].status != "ok"){
-            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
+            status.status = "error"
+            status.message = status.message + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
         }
     }
-    if (statusMessage == ""){
-        statusMessage = "ok"
-    }
-    return statusMessage
-}
-
-function statusMessageGeneratorPUT(statusArray){
-    let statusMessage = ""
-    for (var i in statusArray){
-        if(statusArray[i].status == "incorrect"){
-            statusMessage = statusMessage + `your ${Object.values(statusArray[i])[1]} is ${Object.values(statusArray[i])[0]}, `
-        }
-    }
-    if (statusMessage == ""){
-        statusMessage = "ok"
-    }
-    return statusMessage
+    return status
 }
 
 function validateName(name){

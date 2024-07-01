@@ -3,6 +3,9 @@ const express = require("express")
 const router = express.Router()
 const validations = require('../models/validations.js');
 const fs = require('fs')
+const ValidCharacterRequestFormat = require('../views/characters.js');
+const validCharacterRequestFormat = require("../views/characters.js");
+
 
 let charactersList = []
 
@@ -33,57 +36,71 @@ function getTime(){
     return datetime
 }
 
-function handlePOSTRequest(request){
-    const statusArray = validations.validateFields(request)
-    const statusMessage = validations.statusMessageGenerator(statusArray, "POST")
-    const returnMessage = statusMessageHandler(statusMessage, statusArray, "POST", request)
-    return returnMessage
-}
-
-function handlePUTRequest(request){
-    const statusArray = validations.validateFields(request)
-    const statusMessage = validations.statusMessageGenerator(statusArray, "PUT")
-    const returnMessage = statusMessageHandler(statusMessage, statusArray, "PUT", request)
-    return returnMessage
-}
-
-function statusMessageHandler(statusMessage, statusArray, requestType, request){
-    if(statusMessage != "ok"){
-        return statusMessage
+function getTarget(charactersList, targetId){    
+    try{
+    const targetIdIndex = getTargetIdIndex(charactersList, targetId)
+    const character = charactersList[targetIdIndex]
+    return character
     }
-    if(requestType == "POST"){
-        returnMessage = successHandlerPOST(statusArray, request)
-        return returnMessage
-    }else if(requestType == "PUT"){
-        returnMessage = successHandlerPUT(statusArray, request)
-        return returnMessage
-    } else statusMessage = "error"
-    return statusMessage
+    catch(error){
+        console.log(error)
+    }
+} 
+
+function getTargetIdIndex(charactersList, targetId){
+    const targetIdIndex = charactersList.findIndex((character) => targetId == character.id)
+    if(targetIdIndex == -1){
+        throw {status: "error", message: "No character matches this ID"}
+    }
+    return targetIdIndex
 }
 
-async function successHandlerPOST(statusArray, newCharacterRequest){
-    let newCharacter = {}
-    for(let i in statusArray){
-        var propertyName = Object.values(statusArray[i])[1]
-        newCharacter[propertyName] = newCharacterRequest[propertyName]
+function  handlePOSTRequest(request){
+    const validCharacterRequest = new ValidCharacterRequestFormat(request)
+    let status = validations.validateFields(validCharacterRequest)
+    if (status.status == "ok"){
+        status = successHandlerPOST(validCharacterRequest)
+        return status
     }
-    newCharacter.id = String(randomInt(100000))
-    newCharacter.updated = getTime()
-    charactersList.push(newCharacter)
-    await updateDatabase(charactersList)
-    return (`Character was successfully created with ID: ${newCharacter.id}`)
+    return status
 }
 
-async function successHandlerPUT(statusArray, updateRequest){
-    const updatesRequested = {...updateRequest}
-    for(let i in statusArray){
-        var propertyName = Object.values(statusArray[i])[1]
-        if(Object.values(statusArray[i])[0] == "ok"){
-            charactersList[targetIdIndex][propertyName] = updatesRequested[propertyName]
-        }
+function successHandlerPOST(validCharacterRequest){
+    validCharacterRequest.id = String(randomInt(100000))
+    validCharacterRequest.updated = getTime()
+    charactersList.push(validCharacterRequest)
+    updateDatabase(charactersList)
+    let status = {status: "ok", message: validCharacterRequest}
+    return status
+}
+
+function handlePUTRequest(request){ 
+    let character = getTarget(request.charactersList, request.params.id)
+    character = {...character, ...request.body}
+    const validCharacterRequest = new validCharacterRequestFormat(character)
+    let status = validations.validateFields(validCharacterRequest)
+    if (status.status == "ok"){
+        status = successHandlerPUT(validCharacterRequest, request.charactersList, request.params.id)
+        return status
     }
+    return status
+}
+
+function successHandlerPUT(validCharacterRequest, charactersList, id){
+    const targetIdIndex = getTargetIdIndex(charactersList, id)
+    charactersList[targetIdIndex] = {...charactersList[targetIdIndex], ...validCharacterRequest}
     charactersList[targetIdIndex].updated = getTime()
-    await updateDatabase(charactersList)
+    updateDatabase(charactersList)
+    let status = {status: "ok", message: charactersList[targetIdIndex]}
+    return status
+}
+
+function handleDELRequest(charactersList, id){
+    let targetIndex = getTargetIdIndex(charactersList, id)
+    let character = getTarget(charactersList, id)
+    charactersList.splice(targetIndex, 1)
+    updateDatabase(charactersList)
+    return {status: "ok", message: character}
 }
 
 router.get("/", async (req, res) => {
@@ -97,8 +114,8 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
-        const returnMessage = handlePOSTRequest(req.body)
-        return res.send(returnMessage)
+        const status = handlePOSTRequest(req.body)
+        return res.json(status.message)
     } catch (error) {
         console.log(error);
     }
@@ -106,43 +123,24 @@ router.post("/", async (req, res) => {
 
 router
     .route("/:id")
-    .get(async (req, res) => {
-        try {
-            const data = await readCharactersList();
-            const targetId = req.params.id
-            const targetIdIndex = data.findIndex((character) => targetId == character.id)
-            if(targetIdIndex == -1){
-                return res.send("No character matches this ID")
-            }
-            return res.send(data[targetIdIndex]);
-        } catch (error) {
-            console.log(error);
-        }
+    .get((req, res) => {
+        let character = getTarget(charactersList, req.params.id)
+        return res.send(character);
     })
     .put(async (req, res) => {
         try {
-            const targetId = req.params.id
-            const targetIdIndex = charactersList.findIndex((character) => targetId == character.id)
-
-            const returnMessage = handlePUTRequest({...req.body})
-
-
-            res.send(data[targetIdIndex]);
+            req.charactersList = charactersList
+            const status = handlePUTRequest(req)
+            res.send(status);
         } catch (error) {
+            res.json({message: 'errorMessage'})
             console.log(error);
         }
     })
     .delete(async (req, res) => {
         try {
-            const data = await readCharactersList();
-            const targetId = req.params.id
-            const targetIdIndex = data.findIndex((character) => targetId == character.id)
-            if(targetIdIndex == -1){
-                return res.send("invalid ID")
-            }
-            data.splice(targetIdIndex, 1)
-            await updateDatabase(data)
-            res.send(data);
+            const status = handleDELRequest(charactersList, req.params.id)
+            res.send(status);
         } catch (error) {
             console.log(error);
         }
