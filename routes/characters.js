@@ -43,7 +43,7 @@ function getTarget(charactersList, targetId){
     return character
     }
     catch(error){
-        console.log(error)
+        return error
     }
 } 
 
@@ -56,13 +56,19 @@ function getTargetIdIndex(charactersList, targetId){
 }
 
 function  handlePOSTRequest(request){
-    const validCharacterRequest = new ValidCharacterRequestFormat(request)
-    let status = validations.validateFields(validCharacterRequest)
-    if (status.status == "ok"){
-        status = successHandlerPOST(validCharacterRequest)
+    try{
+        const validCharacterRequest = new ValidCharacterRequestFormat(request)
+        let status = validations.validateFields(validCharacterRequest)
+        if (status.status == "ok"){
+            status = successHandlerPOST(validCharacterRequest)
+            return status
+        }
         return status
     }
-    return status
+    catch (error){
+        return error
+    }
+
 }
 
 function successHandlerPOST(validCharacterRequest){
@@ -96,19 +102,24 @@ function successHandlerPUT(validCharacterRequest, charactersList, id){
 }
 
 function handleDELRequest(charactersList, id){
-    let targetIndex = getTargetIdIndex(charactersList, id)
-    let character = getTarget(charactersList, id)
-    charactersList.splice(targetIndex, 1)
-    updateDatabase(charactersList)
-    return {status: "ok", message: character}
+    try{
+        let targetIndex = getTargetIdIndex(charactersList, id)
+        let character = getTarget(charactersList, id)
+        charactersList.splice(targetIndex, 1)
+        updateDatabase(charactersList)
+        return {status: "ok", message: character}
+    }
+    catch (error){
+        return error
+    }
 }
 
 router.get("/", async (req, res) => {
     try {
         res.send(charactersList);
     } catch (error) {
-        console.log(error);
-        res.status(500).send("Error fetching characters list");
+        res.send(error)
+        // res.status(500).send("Error fetching characters list");
     }
 })
 
@@ -117,32 +128,36 @@ router.post("/", async (req, res) => {
         const status = handlePOSTRequest(req.body)
         return res.json(status.message)
     } catch (error) {
-        console.log(error);
+        res.send(error)
     }
 })
 
 router
     .route("/:id")
     .get((req, res) => {
-        let character = getTarget(charactersList, req.params.id)
-        return res.send(character);
+        try{
+            let character = getTarget(charactersList, req.params.id)
+            return res.send(character);
+        }
+        catch(error){
+            res.send(error)
+        }
     })
     .put(async (req, res) => {
         try {
             req.charactersList = charactersList
             const status = handlePUTRequest(req)
-            res.send(status);
+            return res.json(status.message)
         } catch (error) {
-            res.json({message: 'errorMessage'})
-            console.log(error);
+            res.send(error)
         }
     })
     .delete(async (req, res) => {
         try {
             const status = handleDELRequest(charactersList, req.params.id)
-            res.send(status);
+            return res.json(status.message)
         } catch (error) {
-            console.log(error);
+            res.send(error)
         }
     });
 
